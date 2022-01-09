@@ -152,6 +152,22 @@ def return_daily_list_object_with_year(since, upto, year) -> dict:
         "message": "success"
     }
 
+def return_daily_list_object_with_year_and_monthly(since, upto, year, month) -> dict:
+    data_list_to_show = []
+
+    current_date = datetime.datetime.strptime(since, "%Y.%m.%d")
+    target_upto_date = datetime.datetime.strptime(upto, "%Y.%m.%d") if response["update"]["penambahan"]["tanggal"] == str(upto.replace(".", "-")) else datetime.datetime.strptime(upto, "%Y.%m.%d") - datetime.timedelta(days=1)
+
+    while current_date <= target_upto_date:
+        data_list_to_show.append(return_specific_data_response(str(current_date)[:10])["data"])
+        current_date += datetime.timedelta(days=1)
+
+    return {
+        "ok": True,
+        "data": data_list_to_show,
+        "message": "success"
+    }
+
 app = FastAPI()
 
 @app.get("/")
@@ -185,6 +201,10 @@ async def read_query(since: str = "2020.03.02", upto: str = str(datetime.datetim
 @app.get("/daily/{year}")
 async def read_query(since: str = "2020.03.02", upto: str = "2020.12.31", year: str = "2020"):
     return return_daily_list_object_with_year(since, upto, year)
+
+@app.get("/daily/{year}/{month}")
+async def read_query(since: str = "2020.03.02", upto: str = "2020.03.31", year: str = "2020", month: str = "03"):
+    return return_daily_list_object_with_year_and_monthly(since, upto, year, month)
 
 @app.get("/daily/{year}/{month}/{date}")
 async def read_parameter(year: str, month: str, date: str):
