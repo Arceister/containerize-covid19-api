@@ -1,7 +1,6 @@
 from fastapi.exceptions import HTTPException
 import requests
 from fastapi import FastAPI
-from typing import Optional
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -127,6 +126,32 @@ def return_daily_list_object(since, upto) -> dict:
         "message": "success"
     }
 
+def return_daily_list_object_with_year(since, upto, year) -> dict:
+    data_list_to_show = []
+
+    if since[:4] != upto[:4]:
+        return HTTPException(422, "the year between two parameters must be the same year!")
+    if str(since[:4]) != str(year) or str(upto[:4]) != str(year):
+        return HTTPException(422, "query parameter year must be same with path parameter year!")
+    if year == "2020":
+        since = since[:5] + "03.20"
+    if year != "2020":
+        since = year + since[4:]
+        upto = year + upto[4:]
+
+    current_date = datetime.datetime.strptime(since, "%Y.%m.%d")
+    target_upto_date = datetime.datetime.strptime(upto, "%Y.%m.%d") if response["update"]["penambahan"]["tanggal"] == str(upto.replace(".", "-")) else datetime.datetime.strptime(upto, "%Y.%m.%d") - datetime.timedelta(days=1)
+
+    while current_date <= target_upto_date:
+        data_list_to_show.append(return_specific_data_response(str(current_date)[:10])["data"])
+        current_date += datetime.timedelta(days=1)
+
+    return {
+        "ok": True,
+        "data": data_list_to_show,
+        "message": "success"
+    }
+
 app = FastAPI()
 
 @app.get("/")
@@ -156,6 +181,10 @@ async def read_parameter(year: str, month: str):
 @app.get("/daily")
 async def read_query(since: str = "2020.03.02", upto: str = str(datetime.datetime.now())[:10].replace("-", ".")):
     return return_daily_list_object(since, upto)
+
+@app.get("/daily/{year}")
+async def read_query(since: str = "2020.03.02", upto: str = "2020.12.31", year: str = "2020"):
+    return return_daily_list_object_with_year(since, upto, year)
 
 @app.get("/daily/{year}/{month}/{date}")
 async def read_parameter(year: str, month: str, date: str):
