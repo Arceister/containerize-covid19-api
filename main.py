@@ -4,10 +4,11 @@ from fastapi import FastAPI
 from typing import Optional
 import datetime
 
+
 base_url = "https://data.covid19.go.id/public/api/"
 response = requests.get(base_url + "update.json").json()
 
-def return_normal_data():
+def return_normal_data() -> dict:
     return_dict = {
         "ok": True,
         "data": {
@@ -24,7 +25,7 @@ def return_normal_data():
     }
     return return_dict
 
-def return_specific_data_response(date):
+def return_specific_data_response(date) -> dict:
     date_indicator = "year" if len(date) == 4 else "month" if len(date) == 7 else "date"
     data_list = {
         date_indicator: date,
@@ -46,7 +47,7 @@ def return_specific_data_response(date):
     }
     return return_dict
 
-def return_yearly_list_object(since, upto):
+def return_yearly_list_object(since, upto) -> dict:
     current_timestamp = str(datetime.datetime.now())
 
     #Error Handling
@@ -62,7 +63,11 @@ def return_yearly_list_object(since, upto):
     for years in range(since, upto+1):
         data_list_to_show.append(return_specific_data_response(str(years))["data"])
 
-    return data_list_to_show
+    return {
+        "ok": True,
+        "data": data_list_to_show,
+        "message": "success"
+    }
 
 app = FastAPI()
 
