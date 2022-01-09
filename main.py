@@ -3,7 +3,7 @@ import requests
 from fastapi import FastAPI
 from typing import Optional
 import datetime
-
+from dateutil.relativedelta import relativedelta
 
 base_url = "https://data.covid19.go.id/public/api/"
 response = requests.get(base_url + "update.json").json()
@@ -69,6 +69,22 @@ def return_yearly_list_object(since, upto) -> dict:
         "message": "success"
     }
 
+def return_monthly_list_object(since, upto) -> dict:
+    data_list_to_show = []
+
+    current_month = datetime.datetime.strptime(since, "%Y.%m")
+    target_upto_month = datetime.datetime.strptime(upto, "%Y.%m")
+
+    while current_month <= target_upto_month:
+        data_list_to_show.append(return_specific_data_response(str(current_month)[:7])["data"])
+        current_month += relativedelta(months = 1)
+
+    return {
+        "ok": True,
+        "data": data_list_to_show,
+        "message": "success"
+    }
+
 app = FastAPI()
 
 @app.get("/")
@@ -77,11 +93,15 @@ async def root():
 
 @app.get("/yearly")
 async def read_query(since: int = 2020, upto: int = 2022):
-    return return_yearly_list_object(since, upto)
+    return return_yearly_list_object(since.replace(".", "-"), upto.replace(".", "-"))
 
 @app.get("/yearly/{year}")
 async def read_parameter(year: str):
     return return_specific_data_response(year)
+
+@app.get("/monthly")
+async def read_query(since: str = "2020.03", upto: str = str(datetime.datetime.now())[:7].replace("-", ".")):
+    return return_monthly_list_object(since, upto)
 
 @app.get("/monthly/{year}/{month}")
 async def read_parameter(year: str, month: str):
