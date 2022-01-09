@@ -1,27 +1,21 @@
+from fastapi.exceptions import HTTPException
 import requests
-import json
 from fastapi import FastAPI
-
-def print_object(obj):
-    text = json.dumps(obj, sort_keys=True, indent=4)
-    print(text)
+from typing import Optional
+import datetime
 
 base_url = "https://data.covid19.go.id/public/api/"
 response = requests.get(base_url + "update.json").json()
 
-def base_return_response():
-    return_dict = {}
-    return_dict["ok"] = True
-    return return_dict
-
 def return_normal_data():
-    return_dict = base_return_response()
-    return_dict["data"] = response["update"]["total"]
-    return_dict["message"] = "success"
+    return_dict = {
+        "ok": True,
+        "data": response["update"]["total"],
+        "message": "success"
+    }
     return return_dict
 
-def return_one_response(date):
-    return_dict = base_return_response()
+def return_specific_data_response(date):
     date_indicator = "year" if len(date) == 4 else "month" if len(date) == 7 else "date"
     data_list = {
         date_indicator: date,
@@ -36,8 +30,30 @@ def return_one_response(date):
             data_list["recovered"] += int(data["jumlah_sembuh"]["value"])
             data_list["deaths"] += int(data["jumlah_meninggal"]["value"])
             data_list["active"] += int(data["jumlah_positif"]["value"]) - int(data["jumlah_sembuh"]["value"]) - int(data["jumlah_meninggal"]["value"])
-    return_dict.update(data_list)
+    return_dict = {
+        "ok": True,
+        "data": data_list,
+        "message": "success"
+    }
     return return_dict
+
+def return_yearly_list_object(since, upto):
+    current_timestamp = str(datetime.datetime.now())
+
+    #Error Handling
+    if since > upto:
+        return {"ok": False, "message": "since can't be higher than upto!"}
+    if upto > int(current_timestamp[:4]):
+        return {"ok": False, "message": "upto can't exceed now!"}
+    if since < 2020:
+        return {"ok": False, "message": "since can't be lower than 2020!"}
+    
+    data_list_to_show = []
+
+    for years in range(since, upto+1):
+        data_list_to_show.append(return_specific_data_response(str(years))["data"])
+
+    return data_list_to_show
 
 app = FastAPI()
 
@@ -45,14 +61,18 @@ app = FastAPI()
 async def root():
     return return_normal_data()
 
+@app.get("/yearly")
+async def read_query(since: int = 2020, upto: int = 2022):
+    return return_yearly_list_object(since, upto)
+
 @app.get("/yearly/{year}")
-async def read_parameter(year):
-    return return_one_response(year)
+async def read_parameter(year: str):
+    return return_specific_data_response(year)
 
 @app.get("/monthly/{year}/{month}")
-async def read_parameter(year, month):
-    return return_one_response((year + "." + month).replace(".", "-"))
+async def read_parameter(year: str, month: str):
+    return return_specific_data_response((year + "." + month).replace(".", "-"))
 
 @app.get("/daily/{year}/{month}/{date}")
-async def read_parameter(year, month, date):
-    return return_one_response((year + "." + month + "." + date).replace(".", "-"))
+async def read_parameter(year: str, month: str, date: str):
+    return return_specific_data_response((year + "." + month + "." + date).replace(".", "-"))
