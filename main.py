@@ -20,25 +20,24 @@ def return_normal_data():
     return_dict["message"] = "success"
     return return_dict
 
-def return_yearly_with_year(year):
+def return_one_response(date):
     return_dict = base_return_response()
-    yearly_data_list = {
-        "year": year,
+    date_indicator = "year" if len(date) == 4 else "month" if len(date) == 7 else "date"
+    data_list = {
+        date_indicator: date,
         "positive": 0,
         "recovered": 0,
         "deaths": 0,
         "active": 0,
-        "message": ""
     }
     for data in response["update"]["harian"]:
-        if (data["key_as_string"][:4] == year):
-            yearly_data_list["positive"] += int(data["jumlah_positif"]["value"])
-            yearly_data_list["recovered"] += int(data["jumlah_sembuh"]["value"])
-            yearly_data_list["deaths"] += int(data["jumlah_meninggal"]["value"])
-            yearly_data_list["active"] += int(data["jumlah_dirawat"]["value"])
-    return_dict.update(yearly_data_list)
+        if (data["key_as_string"][: + len(date)] == date):
+            data_list["positive"] += int(data["jumlah_positif"]["value"])
+            data_list["recovered"] += int(data["jumlah_sembuh"]["value"])
+            data_list["deaths"] += int(data["jumlah_meninggal"]["value"])
+            data_list["active"] += int(data["jumlah_positif"]["value"]) - int(data["jumlah_sembuh"]["value"]) - int(data["jumlah_meninggal"]["value"])
+    return_dict.update(data_list)
     return return_dict
-
 
 app = FastAPI()
 
@@ -47,6 +46,13 @@ async def root():
     return return_normal_data()
 
 @app.get("/yearly/{year}")
-async def read_item(year):
-    return return_yearly_with_year(year)
+async def read_parameter(year):
+    return return_one_response(year)
 
+@app.get("/monthly/{year}/{month}")
+async def read_parameter(year, month):
+    return return_one_response((year + "." + month).replace(".", "-"))
+
+@app.get("/daily/{year}/{month}/{date}")
+async def read_parameter(year, month, date):
+    return return_one_response((year + "." + month + "." + date).replace(".", "-"))
