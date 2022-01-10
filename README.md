@@ -16,3 +16,8 @@
 3) Make sure the image is succesfully built. Run `docker images` and see if the image is already built.
 4) After that, run `docker run -d --name container -p <your desired port>:8085 covidapi`.
 5) Open your `localhost:<the port>` to see the magic!
+
+## Run test:
+1) Clone this Repo.
+2) Run `pip install -r requirements.txt` (Make sure you've pip installed).
+3) Run `pytest` on root directory.
