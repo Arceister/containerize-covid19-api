@@ -1,8 +1,8 @@
-from api.routes.root import app
+from api.routes.root import router
 from api.covid_api.covid_api import response
 from fastapi.testclient import TestClient
 
-client = TestClient(app)
+client = TestClient(router)
 
 def test_root_function():
     response_result = client.get("/")
