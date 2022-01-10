@@ -3,7 +3,7 @@ from api.covid_api.covid_api import response
 from fastapi import FastAPI
 import datetime
 from dateutil.relativedelta import relativedelta
-from api.routes import root
+from api.routes import root, yearly_router
 
 def return_specific_data_response(date) -> dict:
     date_indicator = "year" if len(date) == 4 else "month" if len(date) == 7 else "date"
@@ -27,28 +27,6 @@ def return_specific_data_response(date) -> dict:
     }
     return return_dict
 
-def return_yearly_list_object(since, upto) -> dict:
-    current_timestamp = str(datetime.datetime.now())
-
-    #Error Handling
-    if since > upto:
-        return {"ok": False, "message": "since can't be higher than upto!"}
-    if upto > int(current_timestamp[:4]):
-        return {"ok": False, "message": "upto can't exceed now!"}
-    if since < 2020:
-        return {"ok": False, "message": "since can't be lower than 2020!"}
-    
-    data_list_to_show = []
-
-    for years in range(since, upto+1):
-        data_list_to_show.append(return_specific_data_response(str(years))["data"])
-
-    return {
-        "ok": True,
-        "data": data_list_to_show,
-        "message": "success"
-    }
-
 def return_monthly_list_object(since, upto) -> dict:
     data_list_to_show = []
 
@@ -67,9 +45,9 @@ def return_monthly_list_object(since, upto) -> dict:
 
 def return_monthly_list_object_with_year(since, upto, year) -> dict:
     if since[:4] != upto[:4]:
-        return HTTPException(422, "the year between two parameters must be the same year!")
+        raise HTTPException(422, "the year between two parameters must be the same year!")
     if str(since[:4]) != str(year) or str(upto[:4]) != str(year):
-        return HTTPException(422, "query parameter year must be same with path parameter year!")
+        raise HTTPException(422, "query parameter year must be same with path parameter year!")
     if year == "2020":
         since = since[:5] + "03"
     if year != "2020":
@@ -111,9 +89,9 @@ def return_daily_list_object_with_year(since, upto, year) -> dict:
     data_list_to_show = []
 
     if since[:4] != upto[:4]:
-        return HTTPException(422, "the year between two parameters must be the same year!")
+        raise HTTPException(422, "the year between two parameters must be the same year!")
     if str(since[:4]) != str(year) or str(upto[:4]) != str(year):
-        return HTTPException(422, "query parameter year must be same with path parameter year!")
+        raise HTTPException(422, "query parameter year must be same with path parameter year!")
     if year == "2020":
         since = since[:5] + "03.20"
     if year != "2020":
@@ -152,14 +130,7 @@ def return_daily_list_object_with_year_and_monthly(since, upto, year, month) -> 
 app = FastAPI()
 
 app.include_router(root.router)
-
-@app.get("/yearly")
-async def read_query(since: int = 2020, upto: int = 2022):
-    return return_yearly_list_object(since.replace(".", "-"), upto.replace(".", "-"))
-
-@app.get("/yearly/{year}")
-async def read_parameter(year: str):
-    return return_specific_data_response(year)
+app.include_router(yearly_router.router)
 
 @app.get("/monthly")
 async def read_query(since: str = "2020.03", upto: str = str(datetime.datetime.now())[:7].replace("-", ".")):
