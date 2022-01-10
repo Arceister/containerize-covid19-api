@@ -1,11 +1,8 @@
 from main import app
-import requests
+from api.covid_api.covid_api import response
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
-
-base_url = "https://data.covid19.go.id/public/api/"
-response = requests.get(base_url + "update.json").json()
 
 def test_root_function():
     response_result = client.get("/")

@@ -1,11 +1,8 @@
 from fastapi.exceptions import HTTPException
-import requests
+from api.covid_api.covid_api import response
 from fastapi import FastAPI
 import datetime
 from dateutil.relativedelta import relativedelta
-
-base_url = "https://data.covid19.go.id/public/api/"
-response = requests.get(base_url + "update.json").json()
 
 def return_normal_data() -> dict:
     return_dict = {
