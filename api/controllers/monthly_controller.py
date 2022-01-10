@@ -13,7 +13,7 @@ def return_monthly_object(month) -> dict:
     return return_specific_data_response(month)
 
 def return_monthly_list_object(since, upto) -> dict:
-    current_month = datetime.datetime.strptime(month, "%Y-%m")
+    current_month = datetime.datetime.strptime(since, "%Y.%m")
     target_upto_month = datetime.datetime.strptime(str(response["update"]["penambahan"]["tanggal"])[:7], "%Y-%m")
 
     if (current_month > target_upto_month or current_month < datetime.datetime.strptime("2020-03", "%Y-%m")):
