@@ -3,23 +3,7 @@ from api.covid_api.covid_api import response
 from fastapi import FastAPI
 import datetime
 from dateutil.relativedelta import relativedelta
-
-def return_normal_data() -> dict:
-    return_dict = {
-        "ok": True,
-        "data": {
-            "total_positive": response["update"]["total"]["jumlah_positif"],
-            "total_recovered": response["update"]["total"]["jumlah_sembuh"],
-            "total_deaths": response["update"]["total"]["jumlah_meninggal"],
-            "total_active": response["update"]["total"]["jumlah_dirawat"],
-            "new_positive": response["update"]["penambahan"]["jumlah_positif"],
-            "new_recovered": response["update"]["penambahan"]["jumlah_sembuh"],
-            "new_deaths": response["update"]["penambahan"]["jumlah_meninggal"],
-            "new_active": response["update"]["penambahan"]["jumlah_dirawat"]
-        },
-        "message": "success"
-    }
-    return return_dict
+from api.routes import root
 
 def return_specific_data_response(date) -> dict:
     date_indicator = "year" if len(date) == 4 else "month" if len(date) == 7 else "date"
@@ -167,9 +151,7 @@ def return_daily_list_object_with_year_and_monthly(since, upto, year, month) -> 
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return return_normal_data()
+app.include_router(root.router)
 
 @app.get("/yearly")
 async def read_query(since: int = 2020, upto: int = 2022):

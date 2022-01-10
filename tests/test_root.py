@@ -1,4 +1,4 @@
-from main import app
+from api.routes.root import app
 from api.covid_api.covid_api import response
 from fastapi.testclient import TestClient
 
