@@ -1,8 +1,5 @@
-from requests.models import HTTPError
 from api.routes.yearly_router import router
-# from api.covid_api.covid_api import response
 from fastapi.testclient import TestClient
-import pytest
 
 client = TestClient(router)    
 
